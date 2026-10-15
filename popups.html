@@ -13,7 +13,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="robots" content="noindex, nofollow">
-<title>天黑黑 · 满屏飘窗版</title>
+<title>致听《天黑黑》的你</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1830'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='%238fb6f0'%3E%E9%9B%A8%3C/text%3E%3C/svg%3E">
 <!--
   版本 2：满屏飘窗版
@@ -349,14 +349,6 @@ canvas {
   cursor: pointer;
 }
 
-.drawer .notice {
-  margin: 34px 0 0;
-  font-size: 11.5px; line-height: 1.9;
-  color: rgba(234, 240, 248, 0.4);
-}
-
-.drawer .notice a { color: rgba(143, 182, 240, 0.85); }
-
 /* ---------- 落星 ---------- */
 .starfall {
   position: fixed; top: -8vh; z-index: 55;
@@ -467,12 +459,13 @@ html.js .needjs { display: none; }
     <p class="sub-label" data-node-name="rememberLabel">记在心上</p>
     <ul id="rememberList"></ul>
     <p class="close-btn" id="close">收好</p>
-    <p class="notice">
-      页面骨架来自开源项目
-      <a href="https://github.com/abandon888/HappyBirthday" target="_blank" rel="noopener">abandon888/HappyBirthday</a>
-      与上游 <a href="https://github.com/faahim/happy-birthday" target="_blank" rel="noopener">faahim/happy-birthday</a>（MIT 协议），
+    <!--
+      MIT 署名。按你的要求不再显示在页面上，但 MIT 许可证要求这份声明随代码一起保留，
+      所以放在这里（完整许可证原文见 NOTICE.md，仓库里那份也保留着）：
+      页面骨架来自 abandon888/HappyBirthday（https://github.com/abandon888/HappyBirthday）
+      与上游 faahim/happy-birthday（https://github.com/faahim/happy-birthday），MIT 协议；
       由本页作者改写为雨夜祝福版。窗口可以拖动，也可以按 × 关掉。
-    </p>
+    -->
   </div>
 
 </div>
