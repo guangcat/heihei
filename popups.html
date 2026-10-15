@@ -779,7 +779,9 @@ canvas {
 
   /* ================= 4. 音乐 ================= */
   var song = new Audio();
-  song.loop = true; song.preload = 'none'; song.src = CONFIG.music; song.volume = CONFIG.musicVolume;
+  // preload 用 auto：页面一打开就开始缓冲这首歌。歌有 9MB，如果等她点完「好」才去下载，
+  // 那一瞬间多半还没就绪（见下面 canplaythrough 的处理）。
+  song.loop = true; song.preload = 'auto'; song.src = CONFIG.music; song.volume = CONFIG.musicVolume;
 
   var rain = new Audio();
   rain.loop = true; rain.preload = 'none'; rain.src = CONFIG.rainMusic; rain.volume = CONFIG.rainVolume;
@@ -793,7 +795,14 @@ canvas {
   song.addEventListener('canplaythrough', function () {
     songReady = true;
     playPauseButton.classList.add('show');
-    if (!pad.paused) pad.pause();      // 主音乐就位，钢琴垫让位
+    if (started) {
+      // 她已经点过「好」了，而歌这会儿才缓冲够：现在就接上（钢琴垫让位）。
+      if (isPlaying) {
+        var sp = song.play();
+        if (sp && sp.catch) sp.catch(function () {});
+      }
+      if (!pad.paused) pad.pause();
+    }
   });
   song.addEventListener('error', function () {
     songReady = false;
