@@ -95,7 +95,7 @@ canvas {
   font-size: 15px; line-height: 1;
   font-family: inherit;
   cursor: pointer;
-  z-index: 150;
+  z-index: 400;                     /* 压住弹窗卡片，永远点得到 */
   opacity: 0; pointer-events: none;
   transition: opacity 0.6s ease, background 0.3s ease;
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
@@ -309,7 +309,7 @@ canvas {
   position: fixed; left: 0; right: 0;
   bottom: calc(var(--safe-bottom) + 14px);
   display: flex; justify-content: center; gap: 10px;
-  z-index: 40;
+  z-index: 300;                     /* 压住弹窗卡片 */
   opacity: 0; pointer-events: none;
   transition: opacity 0.9s ease;
 }
@@ -330,7 +330,7 @@ canvas {
 /* ---------- 抽屉 ---------- */
 .drawer {
   position: fixed; inset: 0;
-  z-index: 60;
+  z-index: 600;                     /* 抽屉要在弹出的卡片上面，不然卡片会盖住它 */
   padding: calc(var(--safe-top) + 44px) 26px calc(var(--safe-bottom) + 44px);
   background: linear-gradient(180deg, rgba(7, 12, 22, 0.97), rgba(7, 12, 22, 0.995));
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
@@ -361,18 +361,6 @@ canvas {
   margin: 0 0 10px;
   font-size: 12px; letter-spacing: 0.16em;
   color: var(--dim-color);
-}
-
-.drawer .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
-
-.drawer .pill {
-  display: inline-flex; align-items: center;
-  padding: 10px 15px;
-  border: 1px solid rgba(160, 195, 250, 0.24);
-  border-radius: 999px;
-  background: rgba(20, 32, 56, 0.5);
-  font-size: 13px; color: rgba(234, 240, 248, 0.92);
-  text-decoration: none;
 }
 
 .drawer .close-btn {
@@ -508,10 +496,6 @@ html.js .needjs { display: none; }
     <hr>
     <p class="sub-label" data-node-name="rememberLabel">记在心上</p>
     <ul id="rememberList"></ul>
-    <div class="links">
-      <a class="pill" id="appleLink" href="#" target="_blank" rel="noopener">在 Apple Music 听《天黑黑》</a>
-      <a class="pill" id="neteaseLink" href="#" target="_blank" rel="noopener">在网易云听《天黑黑》</a>
-    </div>
     <p class="close-btn" id="close">收好</p>
     <p class="notice">
       页面骨架来自开源项目
@@ -557,9 +541,8 @@ html.js .needjs { display: none; }
     music: 'music/天黑黑.mp3',        // 这首歌。页面里唯一的音频，没有别的垫底音了
     musicVolume: 1.0,
 
-    /* 两个"去听歌"的出口 */
+    /* 想让"点一下"顺带唤起 Apple Music 就用它（默认关着，见下面的开关） */
     appleMusic: 'https://music.apple.com/cn/search?term=' + encodeURIComponent('天黑黑 孙燕姿'),
-    netease: 'https://music.163.com/#/song?id=287749',   // 已核对过的歌曲 ID
 
     /* 点"好"的时候，要不要顺带唤起 Apple Music 播放《天黑黑》
        iOS 不允许页面一打开就自动跳转，但放在"点一下"里面是允许的 */
@@ -590,6 +573,11 @@ html.js .needjs { display: none; }
       { ico: '\u2727', app: '朋友', ti: '有人',   bo: '你不用一个人扛着，我们都还在。', tm: '23:39' },
       { ico: '\u263c', app: '朋友', ti: '好天气', bo: '愿你此后所求皆如愿，所行化坦途，所遇皆温柔。', tm: '23:47' },
       { ico: '\u2740', app: '朋友', ti: '我都在', bo: '想说话的时候我随时在；不想说话的时候，我也在。', tm: '23:58' }
+      ,{ ico: '\u2615', app: '朋友', ti: '热的都行', bo: '热水、热水澡、热饭，热的都管用。', tm: '00:06' }
+      ,{ ico: '\u2726', app: '朋友', ti: '慢慢走',   bo: '路不用一次走完，今天走到哪算哪。', tm: '00:14' }
+      ,{ ico: '\u2661', app: '朋友', ti: '想哭就哭', bo: '哭完记得喝点水，这个是真的有用。', tm: '00:22' }
+      ,{ ico: '\u2601', app: '朋友', ti: '不用回',   bo: '不用回消息，看到就行。', tm: '00:31' }
+      ,{ ico: '\u2740', app: '朋友', ti: '会好的',   bo: '这阵子很难，但它不会一直这样。', tm: '00:39' }
     ],
 
     /* ---- 抽屉里的更多话 ---- */
@@ -600,11 +588,15 @@ html.js .needjs { display: none; }
       '愿你走过长长的路，回头看时觉得都值得。',
       '愿你被生活温柔以待，也有力气温柔待人。',
       '天亮之前的那一段最黑，但它一定会亮。'
+      ,'难过不用有期限，但饭要按时吃。'
+      ,'想说话就说，不想说就都不说，两种都行。'
+      ,'以后还会有很好的事发生，不是为了补偿你，只是因为你值得。'
     ],
     remember: [
       '这周找一天，去吃你说想吃的那家。',
       '你要是不想出门，我打包送过去。',
       '不用回我消息，看到就行。'
+      ,'周末陪你去走一走，不说话也行。'
     ],
 
     /* ---- 节奏（毫秒） ---- */
@@ -612,6 +604,7 @@ html.js .needjs { display: none; }
     maxVisible: 4,       // 屏幕上最多同时堆几张
     titleHold: 2400,     // 第一幕停留多久
     tailHold: 1800       // 最后一张卡片后停多久进入收尾
+    ,autoLoopAfter: 12000  // 收尾之后停多久，自动无声无息地再放一遍
   };
 
   /* ================= 2. 小工具 ================= */
@@ -647,8 +640,6 @@ html.js .needjs { display: none; }
       rl.appendChild(li);
     });
 
-    $('appleLink').href = CONFIG.appleMusic;
-    $('neteaseLink').href = CONFIG.netease;
     $('typed').textContent = '';
   }
 
@@ -834,6 +825,7 @@ html.js .needjs { display: none; }
   var scene1 = $('scene1'), scene2 = $('scene2'), scene3 = $('scene3');
   var startSign = $('startSign'), footbar = $('footbar');
   var stepTimer = null;
+  var loopTimer = null;
   var started = false;
 
   function show(el, on) { el.classList.toggle('active', on); }
@@ -975,6 +967,7 @@ html.js .needjs { display: none; }
           caret.classList.add('off');
           $('credit').classList.add('show');
           $('wish').classList.add('show');
+          autoLoop();          // 让她读完这几秒，然后自动再放一遍
         }, 520);
       }
     }, reduced ? 40 : 190);
@@ -1053,9 +1046,9 @@ html.js .needjs { display: none; }
     $('drawer').classList.remove('show');
   });
 
-  // 沿用基座的重播按钮
-  $('replay').addEventListener('click', function (ev) {
-    ev.stopPropagation();
+  // 重播：按钮和"自动再来一遍"共用这一段
+  function restart() {
+    if (loopTimer) { clearTimeout(loopTimer); loopTimer = null; }
     if (stepTimer) clearTimeout(stepTimer);
     visible.forEach(function (item) {
       if (item.el.parentNode) item.el.parentNode.removeChild(item.el);
@@ -1075,6 +1068,22 @@ html.js .needjs { display: none; }
     show(scene3, false);
     show(scene2, false);
     playScene1();
+  }
+
+  // 收尾读完之后自动再来一遍。"无感"的意思是：星星退掉、雨回来、剧情接着往下走，
+  // 她什么都不用做，也不用按任何按钮。
+  function autoLoop() {
+    if (loopTimer) clearTimeout(loopTimer);
+    loopTimer = setTimeout(function () {
+      if ($('drawer').classList.contains('show')) { autoLoop(); return; }   // 她在看抽屉，先不打扰
+      restart();
+    }, CONFIG.autoLoopAfter);
+  }
+
+  // 沿用基座的重播按钮
+  $('replay').addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    restart();
   });
 
   /* ================= 7. 启动 ================= */
