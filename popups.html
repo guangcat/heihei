@@ -753,7 +753,8 @@ html.js .needjs { display: none; }
   var playPauseButton = $('playPauseButton');
 
   function updatePlayButton() {
-    playPauseButton.classList.add('show');
+    // 开场页只有"一行字 + 一个「好」"：这个开关要等她点过之后才露出来
+    if (started) playPauseButton.classList.add('show');
     playPauseButton.classList.toggle('playing', isPlaying);
     playPauseButton.classList.toggle('dim', !isPlaying);
   }
