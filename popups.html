@@ -137,28 +137,6 @@ canvas {
 
 .startSign .start-button:active { transform: scale(0.96); background: rgba(160, 195, 250, 0.26); }
 
-/* 没放音频文件时（线上版就是这样）：把"去音乐 App 放歌"的两个入口露出来，
-   免得她只听到合成的垫底音。有 mp3 的时候这一行永远不显示。 */
-.startSign .app-row {
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 9px;
-  margin-top: 22px;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.9s ease;
-}
-
-.startSign .app-row.show { opacity: 1; pointer-events: auto; }
-
-.startSign .app-row .pill {
-  padding: 9px 14px;
-  border: 1px solid rgba(160, 195, 250, 0.24);
-  border-radius: 999px;
-  background: rgba(20, 32, 56, 0.5);
-  font-size: 12.5px; letter-spacing: 0.04em;
-  color: rgba(234, 240, 248, 0.9);
-  text-decoration: none;
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-}
-
 /* ---------- 舞台 ---------- */
 .container {
   position: fixed; inset: 0;
@@ -466,12 +444,6 @@ html.js .needjs { display: none; }
   <p class="hint" data-node-name="hint">戴上耳机，或者把声音开一点点</p>
   <p class="hint status" data-status aria-live="polite"></p>
   <button type="button" id="startButton" class="start-button" data-node-name="startButtonLabel">好</button>
-  <!-- 没放音频文件的时候（线上版就是这样）这一行才会露出来：
-       让她一点就跳去音乐 App 放《天黑黑》，页面照常弹窗。有 mp3 时永远不显示。 -->
-  <div class="app-row" id="appRow">
-    <a class="pill" id="neteaseLink2" href="#" target="_blank" rel="noopener">用网易云放《天黑黑》</a>
-    <a class="pill" id="appleLink2" href="#" target="_blank" rel="noopener">用 Apple Music 放</a>
-  </div>
 </div>
 
 <div class="container" id="container">
@@ -579,7 +551,6 @@ html.js .needjs { display: none; }
 
     /* ---- 文字 ---- */
     hint: '戴上耳机，或者把声音开一点点',
-    hintNoSong: '先在音乐 App 里放上《天黑黑》，再点这里',
     startButtonLabel: '好',
     line1: '天黑黑',
     line1Sub: '下雨了，坐一会儿',
@@ -650,15 +621,6 @@ html.js .needjs { display: none; }
     if (node) node.textContent = message || '';
   }
 
-  // 一个音频文件都没有时（线上版就是这样），把"去音乐 App 放歌"的入口摆到开场页，
-  // 并把提示语换成会说话的那一句。有 mp3 时这两个入口永远不显示。
-  function showAppRow() {
-    var row = $('appRow');
-    if (!row || row.classList.contains('show')) return;
-    row.classList.add('show');
-    setText('hint', CONFIG.hintNoSong);
-  }
-
   function rand(min, max) { return min + Math.random() * (max - min); }
 
   function applyConfig() {
@@ -682,8 +644,6 @@ html.js .needjs { display: none; }
 
     $('appleLink').href = CONFIG.appleMusic;
     $('neteaseLink').href = CONFIG.netease;
-    if ($('appleLink2')) $('appleLink2').href = CONFIG.appleMusic;
-    if ($('neteaseLink2')) $('neteaseLink2').href = CONFIG.netease;
   }
 
   /* ================= 3. 雨和星（canvas） ================= */
@@ -780,9 +740,14 @@ html.js .needjs { display: none; }
 
   /* ================= 4. 音乐 ================= */
   var song = new Audio();
-  // preload 用 auto：页面一打开就开始缓冲这首歌。歌有 9MB，如果等她点完「好」才去下载，
-  // 那一瞬间多半还没就绪（见下面 canplaythrough 的处理）。
-  song.loop = true; song.preload = 'auto'; song.src = CONFIG.music; song.volume = CONFIG.musicVolume;
+  // 文件名不一定完全一样，所以依次试几个常见位置，谁能取到就播谁：
+  //   1. music/天黑黑.mp3（页面旁边的那份；打包成单文件时这里会被替换成内嵌音频）
+  //   2. 天黑黑.mp3（有人习惯把 mp3 和 html 放同一层）
+  var SONG_SRC = [CONFIG.music, '天黑黑.mp3'];
+  var songIndex = 0;
+  var wantPlay = false;        // 她点过「好」、而且没按暂停：想让歌响
+  // preload 用 auto：页面一打开就开始缓冲这首歌，点下去才来得及出声。
+  song.loop = true; song.preload = 'auto'; song.src = SONG_SRC[0]; song.volume = CONFIG.musicVolume;
 
   var songReady = false, isPlaying = false;
   var playPauseButton = $('playPauseButton');
@@ -804,11 +769,23 @@ html.js .needjs { display: none; }
   });
   song.addEventListener('error', function () {
     songReady = false;
-    showAppRow();
+
+    // 这个位置取不到，就试下一个
+    if (songIndex + 1 < SONG_SRC.length) {
+      songIndex++;
+      song.src = SONG_SRC[songIndex];
+      song.load();
+      if (wantPlay) { var p = song.play(); if (p && p.catch) p.catch(function () {}); }
+      return;
+    }
+
+    // 全试完了：页面就是安静的，不摆任何跳转按钮。
+    isPlaying = false;
+    updatePlayButton();
     if (window.location.search.indexOf('debug') >= 0) {
-      setStatus('没找到 music/天黑黑.mp3，页面会静音；右下角"还有几句"里可以去 App 听。');
+      setStatus('没找到音频文件，页面是静音的。');
     } else {
-      console.warn('没找到 music/天黑黑.mp3，页面静音。');
+      console.warn('没找到音频文件，页面静音。');
     }
   });
   song.load();
@@ -818,21 +795,23 @@ html.js .needjs { display: none; }
     // iOS 只肯在用户手势里让媒体开始下载和播放（preload=auto 在蜂窝网络下会被忽略），
     // 写成"等缓冲好才播"，在手机上就等于永远不播。
     // 数据还没到也没关系：这个 promise 会在真能出声的时候才 resolve。
+    wantPlay = true;
     var sp = song.play();
     isPlaying = true;
     updatePlayButton();
     if (sp && sp.catch) {
       sp.catch(function () {
-        // 放不了（没这个文件 / 网络不行）：按钮回到"暂停"，并把去 App 放歌的入口露出来
+        // 放不了（没这个文件 / 网络不行）：按钮回到"暂停"。页面上不摆跳转按钮，
+        // 所以这里就是安静地认了。
         isPlaying = false;
         updatePlayButton();
-        showAppRow();
       });
     }
   }
 
   function togglePlay(play) {
     if (play) { playAll(); return; }
+    wantPlay = false;
     song.pause();
     isPlaying = false;
     updatePlayButton();
